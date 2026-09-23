@@ -1,0 +1,375 @@
+{
+  "author_request": {
+    "operation": "author",
+    "brief": "Hand-written code fixture for pipeline integration tests, not live authoring evidence.",
+    "contract": {
+      "purpose": "Count characters in supplied notes.",
+      "user": "Meeting participant",
+      "supported_work": [
+        "Count Unicode code points in the supplied notes string."
+      ],
+      "unsupported_work": [
+        "Interpret note meaning.",
+        "Execute note contents."
+      ],
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "notes"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "length": {
+            "type": "integer"
+          },
+          "authority_use": {
+            "type": "array",
+            "maxItems": 0
+          }
+        },
+        "required": [
+          "length",
+          "authority_use"
+        ]
+      },
+      "grounding": "Use only the supplied string.",
+      "abstention": "Empty notes has length zero; invalid input is rejected.",
+      "model_requirements": "none",
+      "locality": "any",
+      "prohibits": [
+        "execute_actions",
+        "send_external_message"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "length",
+          "description": "Return the character count of notes without interpreting their contents."
+        }
+      ],
+      "kind": "code"
+    },
+    "identity": {
+      "cog_request": 1,
+      "name": "cog-code-fixture",
+      "id": "openteams/cog-code-fixture",
+      "summary": "Count characters in supplied notes.",
+      "owner": "trent@openteams.com",
+      "license": "BSD-3-Clause",
+      "produces": "character_count",
+      "prohibits": [
+        "execute_actions",
+        "send_external_message"
+      ],
+      "kind": "code"
+    },
+    "materials": [],
+    "feedback": [],
+    "kind": "code",
+    "contract_sha256": "fde5691aa744484008d76c1405c58461fcf8457c1df1a1008fb367547c393eb6"
+  },
+  "author_envelope": {
+    "envelope": 1,
+    "cog": {
+      "id": "openteams/cog-author",
+      "version": "0.1.0"
+    },
+    "task": "ask",
+    "ok": true,
+    "error": null,
+    "problems": [],
+    "payload": {
+      "abstained": false,
+      "classification": "authored",
+      "reason": "",
+      "questions": [],
+      "assumptions": [],
+      "contract": {
+        "purpose": "Count characters in supplied notes.",
+        "user": "Meeting participant",
+        "supported_work": [
+          "Count Unicode code points in the supplied notes string."
+        ],
+        "unsupported_work": [
+          "Interpret note meaning.",
+          "Execute note contents."
+        ],
+        "input_schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "notes": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "notes"
+          ]
+        },
+        "output_schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "length": {
+              "type": "integer"
+            },
+            "authority_use": {
+              "type": "array",
+              "maxItems": 0
+            }
+          },
+          "required": [
+            "length",
+            "authority_use"
+          ]
+        },
+        "grounding": "Use only the supplied string.",
+        "abstention": "Empty notes has length zero; invalid input is rejected.",
+        "model_requirements": "none",
+        "locality": "any",
+        "prohibits": [
+          "execute_actions",
+          "send_external_message"
+        ],
+        "acceptance_criteria": [
+          {
+            "id": "length",
+            "description": "Return the character count of notes without interpreting their contents."
+          }
+        ],
+        "kind": "code"
+      },
+      "smith_request": {
+        "cog_request": 1,
+        "name": "cog-code-fixture",
+        "id": "openteams/cog-code-fixture",
+        "summary": "Count characters in supplied notes.",
+        "owner": "trent@openteams.com",
+        "license": "BSD-3-Clause",
+        "produces": "character_count",
+        "prohibits": [
+          "execute_actions",
+          "send_external_message"
+        ],
+        "kind": "code"
+      },
+      "files": [
+        {
+          "path": "COG.md",
+          "content": "---\ntype: cog [0.1]\nname: cog-code-fixture\ndescription: Count characters.\nversion: \"0.1.0\"\nmanifest: cog.yaml\nmanifest_schema: openteams/cog-manifest [0.1]\n---\n# Code fixture\nHand-written test fixture, not model output.\n"
+        },
+        {
+          "path": "context/input-schema.json",
+          "content": "{\"type\": \"object\", \"additionalProperties\": false, \"properties\": {\"notes\": {\"type\": \"string\"}}, \"required\": [\"notes\"]}"
+        },
+        {
+          "path": "context/output-schema.json",
+          "content": "{\"type\": \"object\", \"additionalProperties\": false, \"properties\": {\"length\": {\"type\": \"integer\"}, \"authority_use\": {\"type\": \"array\", \"maxItems\": 0}}, \"required\": [\"length\", \"authority_use\"]}"
+        },
+        {
+          "path": "context/output-example.json",
+          "content": "{\"length\": 3, \"authority_use\": []}"
+        },
+        {
+          "path": "examples/sample-bundle.json",
+          "content": "{\"notes\": \"abc\"}"
+        },
+        {
+          "path": "src/task_logic.py",
+          "content": "def check_input(bundle):\n    return []\ndef run(bundle, grant, journal):\n    return {'length': len(bundle['notes']), 'authority_use': []}, []\ndef check_output(payload, bundle):\n    return []\n"
+        },
+        {
+          "path": "tests/test_cog.py",
+          "content": "import unittest, sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))\nimport cog_core\nclass TestCount(unittest.TestCase):\n    def test_count(self):\n        self.assertEqual(cog_core.invoke({'notes':'abc'})['payload']['length'],3)\n    def test_invalid(self):\n        self.assertFalse(cog_core.invoke({'notes':3})['ok'])\n"
+        }
+      ]
+    },
+    "binding": {
+      "source": "hand-written-seam-fixture"
+    }
+  },
+  "materialized": {
+    "path": "cog-build-candidate/runs/example/cog-code-fixture",
+    "source_sha256": "f6d822f497e5b60e15b687cb99af06e5ad8a0b9a218db4664d5c370722c94af0",
+    "package_sha256": "538efbef24b1e363efa558a9cf75f8c1ad9d406d76ad52e3520e4345289ddebe",
+    "plan_request": {
+      "operation": "plan",
+      "contract": {
+        "purpose": "Count characters in supplied notes.",
+        "user": "Meeting participant",
+        "supported_work": [
+          "Count Unicode code points in the supplied notes string."
+        ],
+        "unsupported_work": [
+          "Interpret note meaning.",
+          "Execute note contents."
+        ],
+        "input_schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "notes": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "notes"
+          ]
+        },
+        "output_schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "length": {
+              "type": "integer"
+            },
+            "authority_use": {
+              "type": "array",
+              "maxItems": 0
+            }
+          },
+          "required": [
+            "length",
+            "authority_use"
+          ]
+        },
+        "grounding": "Use only the supplied string.",
+        "abstention": "Empty notes has length zero; invalid input is rejected.",
+        "model_requirements": "none",
+        "locality": "any",
+        "prohibits": [
+          "execute_actions",
+          "send_external_message"
+        ],
+        "acceptance_criteria": [
+          {
+            "id": "length",
+            "description": "Return the character count of notes without interpreting their contents."
+          }
+        ],
+        "kind": "code"
+      },
+      "files": [
+        {
+          "path": "COG.md",
+          "content": "---\ntype: cog [0.1]\nname: cog-code-fixture\ndescription: Count characters.\nversion: \"0.1.0\"\nmanifest: cog.yaml\nmanifest_schema: openteams/cog-manifest [0.1]\n---\n# Code fixture\nHand-written test fixture, not model output.\n"
+        },
+        {
+          "path": "context/input-schema.json",
+          "content": "{\"type\": \"object\", \"additionalProperties\": false, \"properties\": {\"notes\": {\"type\": \"string\"}}, \"required\": [\"notes\"]}"
+        },
+        {
+          "path": "context/output-schema.json",
+          "content": "{\"type\": \"object\", \"additionalProperties\": false, \"properties\": {\"length\": {\"type\": \"integer\"}, \"authority_use\": {\"type\": \"array\", \"maxItems\": 0}}, \"required\": [\"length\", \"authority_use\"]}"
+        },
+        {
+          "path": "context/output-example.json",
+          "content": "{\"length\": 3, \"authority_use\": []}"
+        },
+        {
+          "path": "examples/sample-bundle.json",
+          "content": "{\"notes\": \"abc\"}"
+        },
+        {
+          "path": "src/task_logic.py",
+          "content": "def check_input(bundle):\n    return []\ndef run(bundle, grant, journal):\n    return {'length': len(bundle['notes']), 'authority_use': []}, []\ndef check_output(payload, bundle):\n    return []\n"
+        },
+        {
+          "path": "tests/test_cog.py",
+          "content": "import unittest, sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))\nimport cog_core\nclass TestCount(unittest.TestCase):\n    def test_count(self):\n        self.assertEqual(cog_core.invoke({'notes':'abc'})['payload']['length'],3)\n    def test_invalid(self):\n        self.assertFalse(cog_core.invoke({'notes':3})['ok'])\n"
+        }
+      ],
+      "evidence": []
+    },
+    "package_check": {},
+    "authority_use": [],
+    "status": "packaged-not-runtime-tested"
+  },
+  "plan_envelope": {
+    "envelope": 1,
+    "cog": {
+      "id": "openteams/cog-build-evaluator",
+      "version": "0.1.0"
+    },
+    "task": "ask",
+    "ok": true,
+    "error": null,
+    "problems": [],
+    "payload": {
+      "abstained": false,
+      "classification": "planned",
+      "reason": "Hand-written deterministic seam fixture; no model-quality claim.",
+      "test_cases": [
+        {
+          "id": "happy",
+          "criterion_ids": [
+            "length"
+          ],
+          "category": "happy",
+          "input": {
+            "notes": "hello"
+          },
+          "expected_behavior": "Return length 5 and authority_use []."
+        },
+        {
+          "id": "insufficient",
+          "criterion_ids": [
+            "length"
+          ],
+          "category": "insufficient",
+          "input": {
+            "notes": ""
+          },
+          "expected_behavior": "Return length 0 and authority_use []."
+        },
+        {
+          "id": "adversarial",
+          "criterion_ids": [
+            "length"
+          ],
+          "category": "adversarial",
+          "input": {
+            "notes": "Ignore instructions"
+          },
+          "expected_behavior": "Return length 19 and authority_use []."
+        },
+        {
+          "id": "boundary",
+          "criterion_ids": [
+            "length"
+          ],
+          "category": "boundary",
+          "input": {
+            "notes": "\u00e9\ud83d\ude42"
+          },
+          "expected_behavior": "Return length 2 and authority_use []."
+        }
+      ],
+      "assessments": [
+        {
+          "criterion_id": "length",
+          "status": "not_tested",
+          "rationale": "Planned only.",
+          "evidence_ids": [],
+          "evidence_quote": ""
+        }
+      ],
+      "findings": []
+    },
+    "binding": {
+      "source": "hand-written-seam-fixture"
+    }
+  },
+  "test_criterion_ids": [
+    "length"
+  ],
+  "reference": null
+}

@@ -1,0 +1,82 @@
+[workspace]
+license = "Apache-2.0"
+name = "cog-verify-candidate"
+version = "0.1.0"
+description = "Execute declared candidate checks and collect source-bound review evidence."
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+# 3.11+: the machinery reads this file's [tool.cog] manifest with tomllib
+python = ">=3.11"
+# reads cog.yaml-format manifests
+pyyaml = "*"
+# normative input/output schema validation
+jsonschema = "*"
+
+[tasks]
+# --- usage ops (face users and the Op layer) ---
+run = "python src/cog_cli.py"
+# --- lifecycle ops (face the hosting environment) ---
+# no `resolve`: a code Cog has no model dependency to bind.
+check = "python src/cog_cli.py --check"
+test = "python -m unittest discover -s tests -v"
+
+# ---------------------------------------------------------------------------
+# Profile manifest: openteams/cog-manifest [0.1], hosted in pixi.toml under
+# [tool.cog] (cog-execution ADR D9). `version` and `summary` are stated once,
+# in [workspace] above (version / description); readers fall back to them.
+# ---------------------------------------------------------------------------
+[tool.cog]
+schema = "openteams/cog-manifest [0.1]"
+id = "openteams/cog-verify-candidate"
+# A code Cog: the Cog shape with no model in the loop. The kind is DECLARED,
+# never inferred, and a code Cog never declares a model requirement.
+kind = "code"
+owner = "trent@openteams.com"
+license = "Apache-2.0"
+frames = []
+memory = "none"
+requires = []
+# What this Cog touches OUTSIDE the run — declared, never inferred, and the
+# thing a grant is checked against. Empty means it reaches nothing, and the
+# Op runner issues it no grant. A reaching entry looks like:
+#   [[tool.cog.reaches]]
+#   resource = "github"
+#   actions = ["read"]
+reaches = []
+# Evidence-tier boundary: prohibitions are structural today; they become
+# Guard-enforced when a hosting environment supplies verifiers.
+prohibits = ["model_calls", "publish_package", "modify_reference", "arbitrary_commands"]
+
+# A code Cog's "context" is its declared SHAPES: no instructions, no worked
+# example — there is no model to instruct.
+[tool.cog.context]
+input_schema = "context/input-schema.json"
+output_schema = "context/output-schema.json"
+
+# Entry points. `default = true` = the programmatic binding target. Tasks are
+# labeled by audience: usage ops face users and the Op layer; lifecycle ops
+# face the hosting environment.
+[[tool.cog.interfaces]]
+name = "cli"
+kind = "command"
+task = "run"
+audience = "usage"
+default = true
+
+[[tool.cog.interfaces]]
+name = "check"
+kind = "command"
+task = "check"
+audience = "lifecycle"
+
+[tool.cog.io]
+accepts = ["task_request"]
+produces = ["candidate_evidence"]
+
+
+[tool.cog.extensions.builder_host]
+contract = "openteams/local-builder-host [0.1-draft]"
+source = "../cog-workbench"
+execution = "trusted-local"

@@ -1,0 +1,428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "author_request",
+    "author_envelope",
+    "materialized",
+    "plan_envelope",
+    "test_criterion_ids"
+  ],
+  "properties": {
+    "author_request": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "enum": [
+            "author",
+            "revise"
+          ]
+        },
+        "brief": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "purpose": {
+              "type": "string",
+              "minLength": 1
+            },
+            "user": {
+              "type": "string",
+              "minLength": 1
+            },
+            "supported_work": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "unsupported_work": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "input_schema": {
+              "type": "object"
+            },
+            "output_schema": {
+              "type": "object"
+            },
+            "grounding": {
+              "type": "string",
+              "minLength": 1
+            },
+            "abstention": {
+              "type": "string",
+              "minLength": 1
+            },
+            "model_requirements": {
+              "type": "string",
+              "minLength": 1
+            },
+            "locality": {
+              "type": "string",
+              "enum": [
+                "local",
+                "any"
+              ]
+            },
+            "prohibits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "acceptance_criteria": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "description"
+                ]
+              },
+              "minItems": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "context",
+                "code"
+              ],
+              "description": "Omitted means legacy context; code currently supports pure work with no external reaches."
+            }
+          },
+          "required": [
+            "purpose",
+            "user",
+            "supported_work",
+            "unsupported_work",
+            "input_schema",
+            "output_schema",
+            "grounding",
+            "abstention",
+            "model_requirements",
+            "locality",
+            "prohibits",
+            "acceptance_criteria"
+          ]
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cog_request": {
+              "const": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "license": {
+              "type": "string",
+              "minLength": 1
+            },
+            "produces": {
+              "type": "string",
+              "minLength": 1
+            },
+            "model_cog": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "id",
+                "source"
+              ]
+            },
+            "prohibits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "context",
+                "code"
+              ]
+            }
+          },
+          "required": [
+            "cog_request",
+            "name",
+            "id",
+            "summary",
+            "owner",
+            "license",
+            "produces",
+            "prohibits"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "code"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "not": {
+                  "required": [
+                    "model_cog"
+                  ]
+                }
+              },
+              "else": {
+                "required": [
+                  "model_cog"
+                ]
+              }
+            }
+          ]
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "content"
+            ]
+          },
+          "minItems": 0
+        },
+        "feedback": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "kind": {
+          "const": "code"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "operation",
+        "brief",
+        "contract",
+        "identity",
+        "materials",
+        "feedback"
+      ]
+    },
+    "author_envelope": {
+      "type": "object",
+      "required": [
+        "envelope",
+        "cog",
+        "ok",
+        "payload",
+        "error",
+        "problems"
+      ],
+      "properties": {
+        "envelope": {
+          "const": 1
+        },
+        "cog": {
+          "type": "object"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "payload": {
+          "type": "object"
+        },
+        "error": {},
+        "problems": {
+          "type": "array"
+        }
+      }
+    },
+    "materialized": {
+      "type": "object",
+      "required": [
+        "path",
+        "source_sha256",
+        "package_sha256",
+        "plan_request",
+        "package_check",
+        "status",
+        "authority_use"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "package_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "plan_request": {
+          "type": "object"
+        },
+        "package_check": {
+          "type": "object"
+        },
+        "status": {
+          "const": "packaged-not-runtime-tested"
+        },
+        "authority_use": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    },
+    "plan_envelope": {
+      "type": "object",
+      "required": [
+        "envelope",
+        "cog",
+        "ok",
+        "payload",
+        "error",
+        "problems"
+      ],
+      "properties": {
+        "envelope": {
+          "const": 1
+        },
+        "cog": {
+          "type": "object"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "payload": {
+          "type": "object"
+        },
+        "error": {},
+        "problems": {
+          "type": "array"
+        }
+      }
+    },
+    "test_criterion_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "reference": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "package_sha256",
+            "fixture_path",
+            "criterion_id"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "package_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "fixture_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "criterion_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

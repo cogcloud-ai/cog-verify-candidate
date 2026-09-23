@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_request",
+    "tests",
+    "case_record",
+    "source_sha256",
+    "package_sha256",
+    "status",
+    "authority_use"
+  ],
+  "properties": {
+    "review_request": {
+      "type": "object"
+    },
+    "tests": {
+      "type": "object"
+    },
+    "case_record": {
+      "type": "string"
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "package_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "status": {
+      "const": "observed-awaiting-review"
+    },
+    "authority_use": {
+      "type": "array",
+      "maxItems": 0
+    }
+  }
+}
