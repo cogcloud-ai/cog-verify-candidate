@@ -42,7 +42,8 @@ points at that fixed fixture package and uses its actual source/package digests;
 it is a portable seam example, not live model evidence. Then invoke
 `pixi run run -- --bundle examples/sample-bundle.json`. If Smith templates change,
 regenerate the example artifacts and fingerprints rather than bypassing checks.
-See ../op-cog-builder/README.md for the real composition.
+See the [builder Op](https://github.com/cogcloud-ai/op-cog-builder/blob/main/README.md)
+for the real composition.
 
 ## Local host contract
 
