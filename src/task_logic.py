@@ -87,7 +87,7 @@ def verify(bundle, suite):
         review['evidence'].append({'id': 'declared-tests:' + criterion, 'criterion_id': criterion,
             'candidate_sha256': source_sha, 'kind': 'execution',
             'status': 'passed' if tests['exit_code'] == 0 else 'failed',
-            'text': json.dumps({'record': tests, 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
+            'text': json.dumps({'record': {key: tests[key] for key in ('record_path', 'exit_code', 'execution_status', 'timeout_seconds')}, 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
     if bundle.get('reference'):
         other = suite.root(bundle['reference']['path'])
         require(other != root and package_digest(other) == bundle['reference']['package_sha256'], 'Reference package changed or is not separate.')

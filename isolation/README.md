@@ -52,3 +52,10 @@ COG_VERIFY_ISOLATION_IMAGE=sha256:IMAGE_ID pixi run test
 
 Linux CI builds a digest-pinned base and executes these checks. Without the
 variable, only the actual Docker checks skip; process-limit tests still run.
+
+Trusted-local descendants that start a new session can escape process-group
+termination; use Docker for confinement. With no explicit timeout the original
+operation deadline applies (600 seconds for declared tests, 240 for cases). An
+explicit policy caps that deadline. Full bounded output is saved once in the
+observation file; per-criterion test evidence refers to that record. Container
+cleanup failures are retained in the observation rather than hiding its outcome.
