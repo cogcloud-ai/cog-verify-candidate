@@ -65,7 +65,7 @@ class ExecutionSuite(Suite):
         self.__dict__.update(base.__dict__)
         self.execution_roots = {base.root(root) for root in roots}
         self.explicit_timeout = 'timeout_seconds' in (policy or {})
-        self.policy = {'mode': 'trusted-local', 'timeout_seconds': 60, 'output_bytes': 1048576, **(policy or {})}
+        self.policy = {'mode': 'trusted-local', 'timeout_seconds': 600, 'output_bytes': 1048576, **(policy or {})}
         require(self.policy['mode'] in ('trusted-local', 'docker'), 'Unknown execution policy.')
         require(type(self.policy['timeout_seconds']) is int and 1 <= self.policy['timeout_seconds'] <= 600, 'Invalid execution timeout.')
         require(type(self.policy['output_bytes']) is int and 1024 <= self.policy['output_bytes'] <= 16777216, 'Invalid output limit.')
