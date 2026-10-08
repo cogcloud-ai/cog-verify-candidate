@@ -10,6 +10,11 @@ pixi install
 pixi run test
 ```
 
+See [isolated verification](isolation/README.md) for the optional Docker policy,
+limits, environment receipts and confinement tests. An empty `test_criterion_ids`
+list retains the declared test result against all accepted criteria as an
+observation; independent review must inspect actual coverage.
+
 This is hand-authored pipeline infrastructure, not a model-generated candidate.
 
 ## License
