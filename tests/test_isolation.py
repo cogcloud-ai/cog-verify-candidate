@@ -22,6 +22,11 @@ class LimitsTests(unittest.TestCase):
     def test_nonzero_exit_is_retained(self):
         result=capture([sys.executable,'-c',"print('diagnostic');raise SystemExit(7)"],ROOT,os.environ,3,1024)
         self.assertEqual(result['exit_code'],7);self.assertIn('diagnostic',result['stdout'])
+    def test_exited_process_group_permission_race_retains_observation(self):
+        with patch('isolated_execution.os.killpg', side_effect=PermissionError):
+            result=capture([sys.executable,'-c',"print('x'*100000)"],ROOT,os.environ,3,1024)
+        self.assertEqual(result['execution_status'],'output-limit')
+
     def test_docker_requires_pinned_image_without_host_fallback(self):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as folder:
             base=Suite(ROOT.parent,Path(folder)/'state',journal=lambda _:None)
