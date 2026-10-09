@@ -57,7 +57,9 @@ variable, only the actual Docker checks skip; process-limit tests still run.
 Trusted-local descendants that start a new session can escape process-group
 termination; use Docker for confinement. With no explicit timeout the original
 operation deadline applies (600 seconds for declared tests, 240 for cases). An
-explicit policy caps that deadline. Full bounded output is saved once in the
-observation file; per-criterion test evidence refers to that record and includes at most 4,096
-characters from each stdout/stderr tail for independent repair review. Container
+explicit policy caps that deadline. Bounded output is retained in execution observations, check records and the
+returned test payload; per-criterion test evidence refers to that record and includes at most 4,096
+characters from each stdout/stderr tail for independent repair review, repeated
+for each linked criterion. Truncation flags and retained character counts identify
+these excerpts; they describe captured output, which may itself be bounded. Container
 cleanup failures are retained in the observation rather than hiding its outcome.
