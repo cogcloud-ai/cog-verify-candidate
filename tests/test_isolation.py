@@ -6,6 +6,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import subprocess
 from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'));sys.path.insert(0,str(ROOT.parent/'cog-workbench/src'))
@@ -61,6 +62,8 @@ class DockerTests(unittest.TestCase):
             timed=suite.call(package,'test',expect_json=False)
             self.assertEqual(timed['execution_status'],'timeout')
             self.assertEqual(timed['container_cleanup'],'removed')
+            remaining=subprocess.run(['docker','ps','-aq','--filter','name=^/'+timed['container']+'$'],capture_output=True,text=True,check=True)
+            self.assertEqual(remaining.stdout.strip(),'')
             (package/'src/probe.py').write_text("print('x'*1000000)")
             suite.policy['timeout_seconds']=10;suite.policy['output_bytes']=1024
             self.assertEqual(suite.call(package,'test',expect_json=False)['execution_status'],'output-limit')

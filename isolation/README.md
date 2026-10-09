@@ -50,12 +50,14 @@ Run the real container checks after building:
 COG_VERIFY_ISOLATION_IMAGE=sha256:IMAGE_ID pixi run test
 ```
 
-Linux CI builds a digest-pinned base and executes these checks. Without the
+Linux CI resolves the base tag to a digest for each build (the tag may change
+between builds), builds from that digest, and executes these checks. Without the
 variable, only the actual Docker checks skip; process-limit tests still run.
 
 Trusted-local descendants that start a new session can escape process-group
 termination; use Docker for confinement. With no explicit timeout the original
 operation deadline applies (600 seconds for declared tests, 240 for cases). An
 explicit policy caps that deadline. Full bounded output is saved once in the
-observation file; per-criterion test evidence refers to that record. Container
+observation file; per-criterion test evidence refers to that record and includes at most 4,096
+characters from each stdout/stderr tail for independent repair review. Container
 cleanup failures are retained in the observation rather than hiding its outcome.

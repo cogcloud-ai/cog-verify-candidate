@@ -87,7 +87,7 @@ def verify(bundle, suite):
         review['evidence'].append({'id': 'declared-tests:' + criterion, 'criterion_id': criterion,
             'candidate_sha256': source_sha, 'kind': 'execution',
             'status': 'passed' if tests['exit_code'] == 0 else 'failed',
-            'text': json.dumps({'record': {key: tests[key] for key in ('record_path', 'exit_code', 'execution_status', 'timeout_seconds')}, 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
+            'text': json.dumps({'record': {key: tests[key] for key in ('record_path', 'exit_code', 'execution_status', 'timeout_seconds')}, 'stdout_excerpt': tests.get('stdout','')[-4096:], 'stderr_excerpt': tests.get('stderr','')[-4096:], 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
     if bundle.get('reference'):
         other = suite.root(bundle['reference']['path'])
         require(other != root and package_digest(other) == bundle['reference']['package_sha256'], 'Reference package changed or is not separate.')
@@ -102,7 +102,7 @@ def verify(bundle, suite):
         require(package_digest(root) == expected_package and package_digest(other) == bundle['reference']['package_sha256'], 'Package changed during reference comparison.')
         review['evidence'].append({'id': 'reference-comparison', 'criterion_id': bundle['reference']['criterion_id'],
             'candidate_sha256': source_sha, 'kind': 'execution', 'status': comparison_status, 'text': json.dumps(comparison)})
-    execution = {'policy': suite.policy, 'policy_sha256': suite.policy_sha256, 'records': [{k: row[k] for k in ('record_path', 'task', 'cog', 'execution_status', 'exit_code', 'policy_sha256')} for row in suite.execution_records]}
+    execution = {'policy': suite.policy, 'policy_sha256': suite.policy_sha256, 'records': [{k: row[k] for k in ('record_path', 'task', 'cog', 'execution_status', 'exit_code', 'policy_sha256', 'timeout_seconds')} for row in suite.execution_records]}
     for evidence in review['evidence']:
         try:
             observation = json.loads(evidence['text'])
