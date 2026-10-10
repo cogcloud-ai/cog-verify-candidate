@@ -30,3 +30,12 @@ jobs:
         run: python3 workspace/cog-op-builder/scripts/bootstrap.py --workspace workspace --install
       - name: Run model-free tests
         run: python3 workspace/cog-op-builder/scripts/verify.py --workspace workspace --package cog-verify-candidate
+      - name: Build pinned isolation image and exercise confinement
+        if: runner.os == 'Linux'
+        run: |
+          docker pull python:3.11-slim
+          base=$(docker image inspect python:3.11-slim --format '{{index .RepoDigests 0}}')
+          docker build --build-arg BASE_IMAGE="$base" -t cog-verification -f workspace/cog-verify-candidate/isolation/Dockerfile workspace/cog-verify-candidate
+          image=$(docker image inspect cog-verification --format '{{.Id}}')
+          cd workspace/cog-verify-candidate
+          COG_VERIFY_ISOLATION_IMAGE="$image" pixi run test

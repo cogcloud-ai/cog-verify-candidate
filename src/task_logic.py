@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT.parent
 sys.path.insert(0, str(WORKSPACE / 'cog-workbench/src'))
 from workbench_suite import Suite, digest, package_digest, require
+from isolated_execution import ExecutionSuite
 
 
 def check_input(bundle):
@@ -72,23 +73,45 @@ def verify(bundle, suite):
         require(suite.file(root, row['path']).read_text() == row['content'], 'Candidate source differs from author snapshot.')
     manifest = suite.manifest(root)
     require(manifest.get('kind') == 'code' and not manifest.get('reaches') and not manifest.get('requires'), 'Candidate is not pure code.')
+    roots = [root]
+    if bundle.get('reference'):
+        roots.append(bundle['reference']['path'])
+    suite = ExecutionSuite(suite, roots, bundle.get('execution_policy'))
     tests = suite.verify(root, 'test')
     require(package_digest(root) == expected_package, 'Candidate package changed while tests executed.')
     observations = suite.evaluate(root, bundle['author_request'], bundle['author_envelope'], bundle['plan_envelope'])
     require(observations['package_sha256'] == expected_package, 'Case execution used a different package.')
     review = observations['review_request']
-    for criterion in bundle['test_criterion_ids']:
+    criteria = bundle['test_criterion_ids'] or [c['id'] for c in snapshot['contract']['acceptance_criteria']]
+    for criterion in criteria:
         review['evidence'].append({'id': 'declared-tests:' + criterion, 'criterion_id': criterion,
             'candidate_sha256': source_sha, 'kind': 'execution',
             'status': 'passed' if tests['exit_code'] == 0 else 'failed',
-            'text': json.dumps({'record': tests, 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
+            'text': json.dumps({'record': {key: tests[key] for key in ('record_path', 'exit_code', 'execution_status', 'timeout_seconds')}, 'stdout_excerpt': tests.get('stdout','')[-4096:], 'stderr_excerpt': tests.get('stderr','')[-4096:], **{stream + '_excerpt_truncated': len(tests.get(stream, '')) > 4096 for stream in ('stdout', 'stderr')}, **{stream + '_retained_characters': len(tests.get(stream, '')) for stream in ('stdout', 'stderr')}, 'scope': 'Declared test suite execution only. The caller links it to this criterion; inspect supplied test source and actual observations for coverage. Exit zero does not prove every criterion. No PYTHONPATH override or automatic environment installation.'})})
     if bundle.get('reference'):
-        comparison = compare_reference(bundle['reference'], snapshot, root, suite)
+        other = suite.root(bundle['reference']['path'])
+        require(other != root and package_digest(other) == bundle['reference']['package_sha256'], 'Reference package changed or is not separate.')
+        reference_manifest = suite.manifest(other)
+        require(reference_manifest.get('kind') == 'code' and not reference_manifest.get('requires') and not reference_manifest.get('reaches'), 'Reference must be pure code.')
+        try:
+            comparison = compare_reference(bundle['reference'], snapshot, root, suite)
+            comparison_status = 'passed'
+        except ValueError as exc:
+            comparison = {'error': str(exc), 'scope': 'Comparison failed; inspect retained execution observations.'}
+            comparison_status = 'failed'
+        require(package_digest(root) == expected_package and package_digest(other) == bundle['reference']['package_sha256'], 'Package changed during reference comparison.')
         review['evidence'].append({'id': 'reference-comparison', 'criterion_id': bundle['reference']['criterion_id'],
-            'candidate_sha256': source_sha, 'kind': 'execution', 'status': 'passed', 'text': json.dumps(comparison)})
+            'candidate_sha256': source_sha, 'kind': 'execution', 'status': comparison_status, 'text': json.dumps(comparison)})
+    execution = {'policy': suite.policy, 'policy_sha256': suite.policy_sha256, 'records': [{k: row[k] for k in ('record_path', 'task', 'cog', 'execution_status', 'exit_code', 'policy_sha256', 'timeout_seconds')} for row in suite.execution_records]}
+    for evidence in review['evidence']:
+        try:
+            observation = json.loads(evidence['text'])
+        except ValueError:
+            observation = {'observation': evidence['text']}
+        evidence['text'] = json.dumps({**observation, 'execution': execution})
     return {'review_request': review, 'tests': tests, 'case_record': observations['record_path'],
             'source_sha256': source_sha, 'package_sha256': expected_package,
-            'status': 'observed-awaiting-review', 'authority_use': []}
+            'status': 'observed-awaiting-review', 'authority_use': [], 'execution': execution}
 
 
 def run(bundle, grant, journal):
