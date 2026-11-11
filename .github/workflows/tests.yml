@@ -39,3 +39,19 @@ jobs:
           image=$(docker image inspect cog-verification --format '{{.Id}}')
           cd workspace/cog-verify-candidate
           COG_VERIFY_ISOLATION_IMAGE="$image" pixi run test
+  isolation-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+      - name: Check the isolation lock matches requirements.in and PyPI hashes
+        # uv keeps the committed pins as preferences, so this fails only when
+        # requirements.in changed, the lock was edited, or PyPI's hashes differ
+        # (including new files uploaded for a pinned version).
+        run: |
+          uv pip compile isolation/requirements.in --universal --python-version 3.11 --generate-hashes --quiet -o isolation/requirements.txt
+          git diff --exit-code isolation/requirements.txt
