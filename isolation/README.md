@@ -1,19 +1,51 @@
 # Isolated verification
 
-Docker is an explicit host prerequisite. No provider, credentials, sibling
-workspace, host home directory, Docker socket, or network is mounted into the
-execution container. This policy is for pure Python Cogs using stdlib, PyYAML
-and jsonschema. Other task executables and dependency sets are refused.
+Docker is an explicit host prerequisite: use Docker Engine 29.9.2 or newer, or
+Docker Desktop 4.96.2 or newer. Earlier versions may still accept the
+compromised eMudhra intermediate CAs when pulling images, depending on the
+host's certificate store. No provider, credentials, sibling workspace, host home
+directory, Docker socket, or network is mounted into the execution container.
+This policy is for pure Python Cogs using stdlib, PyYAML and jsonschema. Other
+task executables and dependency sets are refused.
 
-Build a local image from an immutable public base:
+Build a local image from an immutable public base running Python 3.11 through
+3.14, at or above that line's first release that rejects the compromised
+eMudhra intermediate CAs: 3.11.18, 3.12.16, 3.13.18 or 3.14.10. Official
+`python` images report their release as `PYTHON_VERSION` in the environment
+printed below; for other bases, run `python --version` in the image:
 
 ```sh
 docker pull python:3.11-slim
 # Copy its RepoDigest from this command; no secret output is needed.
 docker image inspect python:3.11-slim --format '{{index .RepoDigests 0}}'
+docker image inspect python:3.11-slim --format '{{json .Config.Env}}'
 docker build --build-arg BASE_IMAGE=python@sha256:BASE_DIGEST -t cog-verification -f isolation/Dockerfile .
 docker image inspect cog-verification --format '{{.Id}}'
 ```
+
+The image installs PyYAML, jsonschema and their dependencies from
+[`requirements.txt`](requirements.txt), with every download checked against its
+pinned hash. A substituted package fails the build, whatever certificates the
+base image trusts. Only wheels are installed, since building a source
+distribution would fetch its build dependencies without hash checks. To change a
+version, edit [`requirements.in`](requirements.in) and regenerate the lock with
+the `uv` command in the header of `requirements.txt`, using uv 0.13.5 or newer
+and keeping `--universal` so it covers every platform and Python version. The
+hashes come from PyPI over TLS, so an older uv could record hashes of
+substituted packages, which every later build would then accept.
+[`check_lock.py`](check_lock.py), run in CI, recompiles the committed versions
+into a fresh file so that every hash comes from PyPI rather than the lock, and
+fails on any difference: a hash that doesn't match PyPI's for the pinned
+version, a pin that no longer satisfies `requirements.in`, or a package added to
+or removed from `requirements.in` without regenerating the lock. It doesn't
+check which versions are pinned: a lock moved to another real release that still
+satisfies `requirements.in`, such as an older transitive dependency, passes, so
+review version changes in the lock's diff. Run it locally with `python3 isolation/check_lock.py` from the repository root.
+
+Rebuild any image built before this hash pinning from a base older than the
+releases listed above (check with the `PYTHON_VERSION` command above, using your
+image ID). Its packages were downloaded over a connection that could have been
+intercepted using the compromised eMudhra intermediate keys.
 
 Supply the resulting `sha256:...` image ID as `execution_policy.image`:
 
